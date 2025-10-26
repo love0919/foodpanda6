@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>熊貓外送費用計算器</title>
+  <style>
+    :root{--bg:#f6f8fb;--card:#fff;--accent:#0b74ff;--muted:#6b7280}
+    *{box-sizing:border-box}
+    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial; background:var(--bg); margin:0; padding:32px; color:#0f172a}
+    .container{max-width:760px;margin:0 auto}
+    .card{background:var(--card);border-radius:12px;padding:20px;box-shadow:0 6px 20px rgba(15,23,42,0.06)}
+    h1{font-size:20px;margin:0 0 6px}
+    p.lead{margin:0 0 16px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    label{display:block;font-size:13px;margin-bottom:6px;color:var(--muted)}
+    input[type=number]{width:100%;padding:10px;border:1px solid #e6e9ef;border-radius:8px;font-size:15px}
+    .controls{display:flex;gap:8px;margin-top:12px}
+    button{background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+    button.secondary{background:#eef2ff;color:var(--accent);border:1px solid #e6ecff}
+    .result{margin-top:16px;padding:14px;border-radius:10px;background:#fbfcff;border:1px solid #eef2ff}
+    .row{display:flex;justify-content:space-between;align-items:center}
+    .muted{color:var(--muted);font-size:13px}
+    .small{font-size:13px}
+    footer{margin-top:14px;color:var(--muted);font-size:13px}
+    @media(max-width:640px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>熊貓外送費用計算器</h1>
+      <p class="lead">基本費用 30 元乘以倍率，超過 2.5 公里後，每公里加收 15 元。</p>
+
+      <div class="grid">
+        <div>
+          <label for="pickupDist">取餐距離 (公里)</label>
+          <input id="pickupDist" type="number" step="0.01" min="0" value="2.5">
+          <p class="muted small">例如：從外送員目前位置到商家</p>
+        </div>
+
+        <div>
+          <label for="deliverDist">送餐距離 (公里)</label>
+          <input id="deliverDist" type="number" step="0.01" min="0" value="2.5">
+          <p class="muted small">例如：從商家到顧客的距離</p>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:12px;grid-template-columns:1fr;">
+        <div>
+          <label for="multiplier">倍率</label>
+          <input id="multiplier" type="number" step="0.01" min="0" value="1.0">
+          <p class="muted small">輸入倍率，例如 1.2 表示基本費用乘以 1.2</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="resetBtn" class="secondary">重設</button>
+      </div>
+
+      <div class="result" id="result">
+        <div class="row"><div class="small muted">取餐額外費用</div><div id="pickupFee">0 元</div></div>
+        <div class="row" style="margin-top:8px"><div class="small muted">送餐額外費用</div><div id="deliverFee">0 元</div></div>
+        <div class="row" style="margin-top:8px"><div class="small muted">基本費用 × 倍率</div><div id="baseFeeShow">30 元</div></div>
+        <hr style="margin:12px 0;border:none;border-top:1px solid #eef2ff">
+        <div class="row"><strong>總外送費用</strong><strong id="totalFee">0 元</strong></div>
+      </div>
+
+      <footer>備註：本計算公式為：(30×倍率) + (取餐超出距離×15) + (送餐超出距離×15)。</footer>
+    </div>
+  </div>
+
+  <script>
+    const baseFee = 30;
+    const rate = 15;
+    const threshold = 2.5;
+
+    const $ = id => document.getElementById(id);
+
+    function calcExtra(dist){
+      const extra = Math.max(0, parseFloat(dist) - threshold);
+      return extra * rate;
+    }
+
+    function formatMoney(x){
+      return Math.round(x*100)/100 + ' 元';
+    }
+
+    function calculate(){
+      const pickupDist = parseFloat($('pickupDist').value) || 0;
+      const deliverDist = parseFloat($('deliverDist').value) || 0;
+      const multiplier = parseFloat($('multiplier').value) || 1;
+
+      const pickupFee = calcExtra(pickupDist);
+      const deliverFee = calcExtra(deliverDist);
+      const adjustedBaseFee = baseFee * multiplier;
+      const total = adjustedBaseFee + pickupFee + deliverFee;
+
+      $('pickupFee').textContent = formatMoney(pickupFee);
+      $('deliverFee').textContent = formatMoney(deliverFee);
+      $('baseFeeShow').textContent = formatMoney(adjustedBaseFee);
+      $('totalFee').textContent = formatMoney(total);
+    }
+
+    ['pickupDist','deliverDist','multiplier'].forEach(id => {
+      $(id).addEventListener('input', calculate);
+    });
+
+    $('resetBtn').addEventListener('click', ()=>{
+      $('pickupDist').value = '2.5';
+      $('deliverDist').value = '2.5';
+      $('multiplier').value = '1.0';
+      calculate();
+    });
+
+    document.addEventListener('DOMContentLoaded', calculate);
+  </script>
+</body>
+</html>
